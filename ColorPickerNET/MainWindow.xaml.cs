@@ -6,6 +6,7 @@
     using System.Security;
     using System.Windows;
     using System.Windows.Controls;
+    using System.Windows.Input;
     using System.Windows.Threading;
 
     using ColorPickerNET.Core;
@@ -45,15 +46,12 @@
             try
             {
                 this.Topmost = true;
-                this.WindowState = System.Windows.WindowState.Normal;
-                this.WindowStyle = System.Windows.WindowStyle.SingleBorderWindow;
-                this.ResizeMode = System.Windows.ResizeMode.NoResize;
 
                 screenPixel = new Bitmap(1, 1, System.Drawing.Imaging.PixelFormat.Format32bppArgb);
 
                 dispatcherTimer = new DispatcherTimer();
                 dispatcherTimer.Tick += new EventHandler(OnDispatcherTimerTick);
-                dispatcherTimer.Interval = new TimeSpan(0, 0, 0, 0, 400);
+                dispatcherTimer.Interval = new TimeSpan(0, 0, 0, 0, 200);
                 dispatcherTimer.Start();
             }
             catch (Exception ex)
@@ -77,18 +75,14 @@
                 if (htmlColor != this.txtCurrentHTMLColor.Text)
                 {
                     this.txtCurrentHTMLColor.Text = htmlColor;
-                    this.txtCurrentRGBColor.Text = string.Format("{0},{1},{2}", c.R.ToString(), c.G.ToString(), c.B.ToString());
-                    this.txtCurrentAColor.Text = string.Format("{0}", c.A.ToString());
+                    this.txtCurrentRGBColor.Text = $"{c.R.ToString()},{c.G.ToString()},{c.B.ToString()}";
+                    this.txtCurrentAColor.Text = c.A.ToString();
 
                     int colorInt = ColorTranslator.ToWin32(c);
                     this.txtCurrentIntColor.Text = colorInt.ToString();
 
-                    System.Windows.Media.Brush selectedBackColor =
-                        (System.Windows.Media.SolidColorBrush)(new System.Windows.Media.BrushConverter().ConvertFrom(htmlColor));
+                    System.Windows.Media.Brush selectedBackColor = (System.Windows.Media.SolidColorBrush)(new System.Windows.Media.BrushConverter().ConvertFrom(htmlColor));
                     this.shapeColorDisplay.Fill = selectedBackColor;
-
-                    this.lblDescription.Text = "HTML-Farbecode mit F2 in Zwischenablage";
-                    this.lblDescriptionWin32.Text = "Win32-Farbecode mit F3 in Zwischenablage";
                 }
             }
             catch (Exception ex)
@@ -106,12 +100,12 @@
                 {
                     IntPtr hSrcDC = gsrc.GetHdc();
                     IntPtr hDC = gdest.GetHdc();
-                    int retval = BitBlt(hDC, 0, 0, 1, 1, hSrcDC, pLocation.X, pLocation.Y,
-                        (int)CopyPixelOperation.SourceCopy);
+                    int retval = BitBlt(hDC, 0, 0, 1, 1, hSrcDC, pLocation.X, pLocation.Y, (int)CopyPixelOperation.SourceCopy);
                     gdest.ReleaseHdc();
                     gsrc.ReleaseHdc();
                 }
             }
+
             return (screenPixel.GetPixel(0, 0));
         }
 
@@ -122,6 +116,9 @@
 
         private void OnLoaded(object sender, RoutedEventArgs e)
         {
+            Mouse.OverrideCursor = Cursors.Arrow;
+            this.lblDescription.Text = "HTML-Farbecode mit F2 in Zwischenablage";
+            this.lblDescriptionWin32.Text = "Win32-Farbecode mit F3 in Zwischenablage";
         }
 
         private void OnClosed(object sender, EventArgs e)

@@ -7,6 +7,8 @@
     <UseWPF>true</UseWPF>
     <UseWindowsForms>True</UseWindowsForms>
     <ApplicationIcon>Resources\Picture\ColorPickerWPF.ico</ApplicationIcon>
+    <AssemblyVersion>1.0.2023.1</AssemblyVersion>
+    <FileVersion>1.0.2023.1</FileVersion>
   </PropertyGroup>
 
   <ItemGroup>
@@ -21,6 +23,7 @@
 
   <ItemGroup>
     <Folder Include="Core\" />
+    <Folder Include="Resources\Style\" />
   </ItemGroup>
 
 </Project>
