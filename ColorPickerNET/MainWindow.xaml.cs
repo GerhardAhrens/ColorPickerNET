@@ -1,7 +1,6 @@
 ﻿namespace ColorPickerNET
 {
     using System;
-    using System.Diagnostics;
     using System.Drawing;
     using System.Windows;
     using System.Windows.Controls;
@@ -77,7 +76,7 @@
                 }
                 else
                 {
-                    this.shapeColorDisplay.Fill = System.Windows.Media.Brushes.White;
+                    this.shapeColorDisplay.Fill = System.Windows.Media.Brushes.Silver;
                 }
             }
             catch (Exception ex)
@@ -112,6 +111,7 @@
         private void OnLoaded(object sender, RoutedEventArgs e)
         {
             Mouse.OverrideCursor = Cursors.Arrow;
+            this.shapeColorDisplay.Fill = System.Windows.Media.Brushes.Silver;
             this.lblDescription.Text = "HTML-Farbecode mit F2 in Zwischenablage";
             this.lblDescriptionWin32.Text = "Win32-Farbecode mit F3 in Zwischenablage";
         }
