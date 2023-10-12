@@ -1,9 +1,8 @@
 ﻿namespace ColorPickerNET
 {
     using System;
+    using System.Diagnostics;
     using System.Drawing;
-    using System.Runtime.InteropServices;
-    using System.Security;
     using System.Windows;
     using System.Windows.Controls;
     using System.Windows.Input;
@@ -18,16 +17,7 @@
     {
         private Bitmap screenPixel = null;
         private DispatcherTimer dispatcherTimer = null;
-        private GlobalKeyboardHook globalKey = new GlobalKeyboardHook();
-
-        #region DLL Import
-        [SecurityCritical, SuppressUnmanagedCodeSecurity, DllImport("user32.dll")]
-        private static extern bool GetCursorPos(ref System.Drawing.Point lpPoint);
-
-        [SecurityCritical, SuppressUnmanagedCodeSecurity, DllImport("gdi32.dll", CharSet = CharSet.Auto, SetLastError = true, ExactSpelling = true)]
-        private static extern int BitBlt(IntPtr hDC,
-            int x, int y, int nWidth, int nHeight, IntPtr hSrcDC, int xSrc, int ySrc, int dwRop);
-        #endregion DLL Import
+        private GlobalKeyboardHook globalKey = null;
 
         public MainWindow()
         {
@@ -46,13 +36,11 @@
             try
             {
                 this.Topmost = true;
-
-                screenPixel = new Bitmap(1, 1, System.Drawing.Imaging.PixelFormat.Format32bppArgb);
-
-                dispatcherTimer = new DispatcherTimer();
-                dispatcherTimer.Tick += new EventHandler(OnDispatcherTimerTick);
-                dispatcherTimer.Interval = new TimeSpan(0, 0, 0, 0, 200);
-                dispatcherTimer.Start();
+                this.screenPixel = new Bitmap(1, 1, System.Drawing.Imaging.PixelFormat.Format32bppArgb);
+                this.dispatcherTimer = new DispatcherTimer();
+                this.dispatcherTimer.Tick += new EventHandler(OnDispatcherTimerTick);
+                this.dispatcherTimer.Interval = new TimeSpan(0, 0, 0, 0, 200);
+                this.dispatcherTimer.Start();
             }
             catch (Exception ex)
             {
@@ -67,22 +55,29 @@
             {
                 System.Drawing.Point cursor = new System.Drawing.Point();
 
-                GetCursorPos(ref cursor);
+                APIUser32.GetCursorPos(out  cursor);
 
-                Color c = GetColorByPosition(cursor);
-                string htmlColor = ColorTranslator.ToHtml(c);
-                
-                if (htmlColor != this.txtCurrentHTMLColor.Text)
+                if (WindowFromCursor.GetWindowFromMousePosition() == null)
                 {
-                    this.txtCurrentHTMLColor.Text = htmlColor;
-                    this.txtCurrentRGBColor.Text = $"{c.R.ToString()},{c.G.ToString()},{c.B.ToString()}";
-                    this.txtCurrentAColor.Text = c.A.ToString();
+                    Color c = GetColorByPosition(cursor);
+                    string htmlColor = ColorTranslator.ToHtml(c);
 
-                    int colorInt = ColorTranslator.ToWin32(c);
-                    this.txtCurrentIntColor.Text = colorInt.ToString();
+                    if (htmlColor != this.txtCurrentHTMLColor.Text)
+                    {
+                        this.txtCurrentHTMLColor.Text = htmlColor;
+                        this.txtCurrentRGBColor.Text = $"{c.R.ToString()},{c.G.ToString()},{c.B.ToString()}";
+                        this.txtCurrentAColor.Text = c.A.ToString();
 
-                    System.Windows.Media.Brush selectedBackColor = (System.Windows.Media.SolidColorBrush)(new System.Windows.Media.BrushConverter().ConvertFrom(htmlColor));
-                    this.shapeColorDisplay.Fill = selectedBackColor;
+                        int colorInt = ColorTranslator.ToWin32(c);
+                        this.txtCurrentIntColor.Text = colorInt.ToString();
+
+                        System.Windows.Media.Brush selectedBackColor = (System.Windows.Media.SolidColorBrush)(new System.Windows.Media.BrushConverter().ConvertFrom(htmlColor));
+                        this.shapeColorDisplay.Fill = selectedBackColor;
+                    }
+                }
+                else
+                {
+                    this.shapeColorDisplay.Fill = System.Windows.Media.Brushes.White;
                 }
             }
             catch (Exception ex)
@@ -100,7 +95,7 @@
                 {
                     IntPtr hSrcDC = gsrc.GetHdc();
                     IntPtr hDC = gdest.GetHdc();
-                    int retval = BitBlt(hDC, 0, 0, 1, 1, hSrcDC, pLocation.X, pLocation.Y, (int)CopyPixelOperation.SourceCopy);
+                    int retval = APIGdi32.BitBlt(hDC, 0, 0, 1, 1, hSrcDC, pLocation.X, pLocation.Y, (int)CopyPixelOperation.SourceCopy);
                     gdest.ReleaseHdc();
                     gsrc.ReleaseHdc();
                 }
@@ -135,14 +130,14 @@
             {
                 string colorValue = this.txtCurrentHTMLColor.Text;
                 System.Windows.Clipboard.SetText(colorValue);
-                this.lblDescription.Text = string.Format("{0}*", this.lblDescription.Text);
+                this.lblDescription.Text = $"{this.lblDescription.Text}";
                 e.Handled = true;
             }
             else if (e.KeyCode == System.Windows.Forms.Keys.F3)
             {
                 string colorValue = this.txtCurrentIntColor.Text;
                 System.Windows.Clipboard.SetText(colorValue);
-                this.lblDescriptionWin32.Text = string.Format("{0}*", this.lblDescriptionWin32.Text);
+                this.lblDescriptionWin32.Text = $"{this.lblDescriptionWin32.Text}";
                 e.Handled = true;
             }
         }
